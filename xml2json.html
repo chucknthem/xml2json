@@ -1,0 +1,31 @@
+<html>
+    <head>
+        <script src="xml2json.js" type="text/javascript"></script>
+        <script type="text/javascript">
+            String.prototype.unescapeHtml = function () {
+                var temp = document.createElement("div");
+                temp.innerHTML = this;
+                var result = temp.childNodes[0].nodeValue;
+                temp.removeChild(temp.firstChild);
+                return result;
+            }
+        function convert() {
+            var xmlstr = document.getElementById('xml').value;
+            console.log(xmlstr);
+
+            var json = XML2JSON.parse(xmlstr, '', true);
+            var xml = (new DOMParser()).parseFromString(xmlstr, "text/xml");
+            
+            document.getElementById('json').innerHTML = JSON.stringify(json);
+        }
+
+    </script>
+    </head>
+    <body>
+        <textarea id="xml" rows="20" cols="100"></textarea>
+        <input type="submit" name="convert" value="convert" onclick="convert();return false" />
+        <textarea id="json" rows="20" cols="100"></textarea>
+
+
+    </body>
+</html>
