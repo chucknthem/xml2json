@@ -1,5 +1,4 @@
 
-
 ```javascript
 var obj = XML2JSON.parse('
   <root>
@@ -20,7 +19,7 @@ var obj = XML2JSON.parse('
     </nodes>                                                                      
   </root>
 ');
-console.log(JSON.stringify);
+console.log(JSON.stringify(obj));
 /*
 {"root": 
   {
