@@ -13,8 +13,8 @@
             var xmlstr = document.getElementById('xml').value;
             console.log(xmlstr);
 
-            var json = XML2JSON.parse(xmlstr, '', true);
-            var xml = (new DOMParser()).parseFromString(xmlstr, "text/xml");
+            var json = XML2JSON.parse(xmlstr);
+            //var xml = (new DOMParser()).parseFromString(xmlstr, "text/xml");
             
             document.getElementById('json').innerHTML = JSON.stringify(json);
         }

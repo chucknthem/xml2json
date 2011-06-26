@@ -1,82 +1,109 @@
 /*
-xmljson v 1.1
- Copyright (c) 2010 Charles Ma 
+   xmljson v 2.0
+   Copyright (c) 2010 Charles Ma 
 
- Permission is hereby granted, free of charge, to any person obtaining a copy
- of this software and associated documentation files (the "Software"), to deal
- in the Software without restriction, including without limitation the rights
- to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- copies of the Software, and to permit persons to whom the Software is
- furnished to do so, subject to the following conditions:
+   Permission is hereby granted, free of charge, to any person obtaining a copy
+   of this software and associated documentation files (the "Software"), to deal
+   in the Software without restriction, including without limitation the rights
+   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+   copies of the Software, and to permit persons to whom the Software is
+   furnished to do so, subject to the following conditions:
 
- The above copyright notice and this permission notice shall be included in
- all copies or substantial portions of the Software.
+   The above copyright notice and this permission notice shall be included in
+   all copies or substantial portions of the Software.
 
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- THE SOFTWARE.
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+   THE SOFTWARE.
 
 */
 
 XML2JSON={
-    parseAttr: function(node) {
-        var json = new Object();
-        for(i = 0; node.attributes != null && 
-                i < node.attributes.length; i++) {
-            json[node.attributes[i].localName] = node.attributes[i].nodeValue;
-        }
-        return json;
-    },
-    parseNode: function(node) {
-       var json = new Object();
-       json[node.localName] = new Array();
-       if(node.childNodes.length > 0) {
-           json[node.localName].push(this.parseAttr(node));
-
-           for(var i = 0; i < node.childNodes.length; i++) {
-               json[node.localName].push(this.parseNode(node.childNodes[i]));
-           }
-       } else {
-           json['_value'] = node.nodeValue;
-       }
-       return json;
-    },
-    parse:function(xml) {
-       if(typeof(xml) == 'string') {
-           xml = (new DOMParser()).parseFromString(xml, "text/xml");
-       }
-       
-       var json = new Object();
-       json = json.merge(this.parseNode(xml.childNodes[0]));
-       return json;
+  parse:function(xml) {
+    if(typeof(xml) == 'string') {
+      xml = (new DOMParser()).parseFromString(xml, "text/xml");
     }
-};
+
+    var json = {}
+    if (xml.nodeType == 9) { // Root document.
+      name = xml.childNodes[0].localName;
+      json[name] = this.parse(xml.childNodes[0]);
+      return json;
+    } else if (xml.nodeType == 1) { // Element.
+      if (xml.hasAttributes()) {
+        json["@attributes"] = {};
+        for (var i = 0; i < xml.attributes.length; i++) {
+          json["@attributes"][xml.attributes[i].nodeName] = xml.attributes[i].nodeValue;
+        }
+      }
+    } else if (xml.nodeType == 3) { // Text.
+      json = xml.nodeValue;
+      return json;
+    }
+
+    // Parse Children.
+    if (xml.hasChildNodes()) {
+      var children = {};
+      for (var i = 0; i < xml.childNodes.length; i++) {
+        var child = this.parse(xml.childNodes[i]);
+        if (xml.childNodes[i].nodeType == 1) {
+          // Child nodes.
+          var name = xml.childNodes[i].localName;
+          if (children[name]) {
+            // Duplicate name, so we make it an array.
+            if (!(children[name] instanceof Array)) {
+              var tmp = children[name];
+              children[name] = [tmp];
+            }
+            children[name].push(child);
+          } else {
+            children[name] = child;
+          }
+        } else if (xml.childNodes[i].nodeType == 3) {
+          // Child text. We should check if it's empty and discard empty text.
+          var name = "@text";
+          var text = child.replace(/^\s+/, '').replace(/\s+$/, '');
+          if (text != "")
+            children[name] = text;
+        }
+      }
+      // We treat the child node of a root node with no attributes and only a 
+      // text child node to be just the text itself.
+      if (!xml.hasAttributes() && xml.childNodes.length == 1 && 
+          children["@text"])
+        json = children["@text"];
+      else
+        json.merge(children);
+    }
+    return json;
+  }
+}
 
 
 if(!Array.prototype.push){
-	Array.prototype.push=function(x){
-		this[this.length]=x;
-		return true
-	}
-};
+  Array.prototype.push=function(x){
+    this[this.length]=x
+      return true
+  }
+}
 
 if (!Array.prototype.pop){
-	Array.prototype.pop=function(){
-  		var response = this[this.length-1];
-  		this.length--;
-  		return response
-	}
-};
+  Array.prototype.pop=function(){
+    var response = this[this.length-1]
+      this.length--
+      return response
+  }
+}
 
 if(!Object.prototype.merge) {
-    Object.prototype.merge = function (x) {
-        for(var key in x) {
-            this[key] = x[key];
-        }
-        return this;
+  Object.prototype.merge = function (x) {
+    for(var key in x) {
+      this[key] = x[key]
     }
+    return this
+  }
 }
