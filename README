@@ -1,4 +1,4 @@
-`javascript
+```javascript
 var obj = XML2JSON.parse('
   <root>
     <withattr id="10" name="5">
@@ -33,4 +33,4 @@ console.log(JSON.stringify);
   }
 }
 */
-`
+```
