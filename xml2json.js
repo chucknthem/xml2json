@@ -23,21 +23,34 @@
 */
 
 XML2JSON={
-  parse:function(xml) {
-    if(typeof(xml) == 'string') {
+  parse: function(xml, options) {
+    /**
+     * @param options:
+     *  - attr2child - Convert attributes to children.
+     */
+    if (!options)
+      options = {}
+
+    if(typeof(xml) == "string") {
       xml = (new DOMParser()).parseFromString(xml, "text/xml");
     }
 
     var json = {}
     if (xml.nodeType == 9) { // Root document.
       name = xml.childNodes[0].localName;
-      json[name] = this.parse(xml.childNodes[0]);
+      json[name] = this.parse(xml.childNodes[0], options);
       return json;
     } else if (xml.nodeType == 1) { // Element.
       if (xml.hasAttributes()) {
-        json["@attributes"] = {};
-        for (var i = 0; i < xml.attributes.length; i++) {
-          json["@attributes"][xml.attributes[i].nodeName] = xml.attributes[i].nodeValue;
+        if (options["attr2child"] == true) {
+          for (var i = 0; i < xml.attributes.length; i++) {
+            json[xml.attributes[i].nodeName] = xml.attributes[i].nodeValue;
+          }
+        } else {
+          json["@attributes"] = {};
+          for (var i = 0; i < xml.attributes.length; i++) {
+            json["@attributes"][xml.attributes[i].nodeName] = xml.attributes[i].nodeValue;
+          }
         }
       }
     } else if (xml.nodeType == 3) { // Text.
@@ -47,37 +60,34 @@ XML2JSON={
 
     // Parse Children.
     if (xml.hasChildNodes()) {
-      var children = {};
       for (var i = 0; i < xml.childNodes.length; i++) {
-        var child = this.parse(xml.childNodes[i]);
+        var child = this.parse(xml.childNodes[i], options);
         if (xml.childNodes[i].nodeType == 1) {
           // Child nodes.
           var name = xml.childNodes[i].localName;
-          if (children[name]) {
+          if (json[name]) {
             // Duplicate name, so we make it an array.
-            if (!(children[name] instanceof Array)) {
-              var tmp = children[name];
-              children[name] = [tmp];
+            if (!(json[name] instanceof Array)) {
+              var tmp = json[name];
+              json[name] = [tmp];
             }
-            children[name].push(child);
+            json[name].push(child);
           } else {
-            children[name] = child;
+            json[name] = child;
           }
         } else if (xml.childNodes[i].nodeType == 3) {
           // Child text. We should check if it's empty and discard empty text.
           var name = "@text";
           var text = child.replace(/^\s+/, '').replace(/\s+$/, '');
           if (text != "")
-            children[name] = text;
+            json[name] = text;
         }
       }
       // We treat the child node of a root node with no attributes and only a 
       // text child node to be just the text itself.
       if (!xml.hasAttributes() && xml.childNodes.length == 1 && 
-          children["@text"])
-        json = children["@text"];
-      else
-        json.merge(children);
+          json["@text"])
+        json = json["@text"];
     }
     return json;
   }
@@ -86,24 +96,24 @@ XML2JSON={
 
 if(!Array.prototype.push){
   Array.prototype.push=function(x){
-    this[this.length]=x
-      return true
+    this[this.length] = x
+      return true;
   }
 }
 
 if (!Array.prototype.pop){
   Array.prototype.pop=function(){
     var response = this[this.length-1]
-      this.length--
-      return response
+      this.length--;
+      return response;
   }
 }
 
 if(!Object.prototype.merge) {
   Object.prototype.merge = function (x) {
     for(var key in x) {
-      this[key] = x[key]
+      this[key] = x[key];
     }
-    return this
+    return this;
   }
 }
