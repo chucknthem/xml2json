@@ -29,13 +29,13 @@ XML2JSON={
      *  - attr2child - Convert attributes to children.
      */
     if (!options)
-      options = {}
+      options = {};
 
     if(typeof(xml) == "string") {
       xml = (new DOMParser()).parseFromString(xml, "text/xml");
     }
 
-    var json = {}
+    var json = {};
     if (xml.nodeType == 9) { // Root document.
       name = xml.childNodes[0].localName;
       json[name] = this.parse(xml.childNodes[0], options);
@@ -68,8 +68,7 @@ XML2JSON={
           if (json[name]) {
             // Duplicate name, so we make it an array.
             if (!(json[name] instanceof Array)) {
-              var tmp = json[name];
-              json[name] = [tmp];
+              json[name] = [json[name]];
             }
             json[name].push(child);
           } else {
@@ -85,14 +84,12 @@ XML2JSON={
       }
       // We treat the child node of a root node with no attributes and only a 
       // text child node to be just the text itself.
-      if (!xml.hasAttributes() && xml.childNodes.length == 1 && 
-          json["@text"])
+      if (!xml.hasAttributes() && xml.childNodes.length == 1 && json["@text"])
         json = json["@text"];
     }
     return json;
   }
 }
-
 
 if(!Array.prototype.push){
   Array.prototype.push=function(x){
@@ -101,19 +98,3 @@ if(!Array.prototype.push){
   }
 }
 
-if (!Array.prototype.pop){
-  Array.prototype.pop=function(){
-    var response = this[this.length-1]
-      this.length--;
-      return response;
-  }
-}
-
-if(!Object.prototype.merge) {
-  Object.prototype.merge = function (x) {
-    for(var key in x) {
-      this[key] = x[key];
-    }
-    return this;
-  }
-}
